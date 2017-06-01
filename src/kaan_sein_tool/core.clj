@@ -33,6 +33,7 @@
   Returns a map {:data :year :employee :employer}"
 [path filename]
   (let [data (slurp path)
+        data (string/join "\n" (remove #(= % "") (string/split data #"\n"))) 
         [year-month employer employee] (string/split filename #"_")]
     {:data data
      :year-month year-month
