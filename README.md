@@ -10,7 +10,7 @@ The csv filename should be in the following format
 
 For example
 
-    2017-05_The Company/My Project_Max Mustermann.csv
+    2017-05_The Company My Project_Max Mustermann.csv
     
 The file should be in csv format with the following mandatory columns:
 
