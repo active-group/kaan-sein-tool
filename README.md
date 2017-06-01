@@ -23,7 +23,7 @@ The columns can occur in any order, there can be more then those three columns.
 "Date" is a date in "YYYY-MM-DD" or "YYYY/MM/DD" format.
 
 "Duration" is a decimal number with "." as delimiter, optionally ending with "h".
-Example: "4.25", "4.25" (4 hours 15 minutes).
+Example: "4.25", "4.25h" (4 hours 15 minutes).
 
 
 Example file data:	
