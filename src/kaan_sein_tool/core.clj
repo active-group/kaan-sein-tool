@@ -105,6 +105,7 @@
 
           meta-header {:padding-bottom 8 :padding-left 2}
           meta {:padding-bottom 6 :padding-left 2}
+          meta-duration (assoc meta :align :right :padding-right 2) 
           meta-bottom {:padding-bottom 6 :padding-left 2 :colspan 2}]
       (pdf/pdf
        [
@@ -134,9 +135,10 @@
          [10 60 7]
          (concat (map (fn [m] [(pdf-cell meta (:date m))
                                (pdf-cell meta (:description m))
-                               (pdf-cell meta (format "%.2f" (read-string (:duration m))))]) rows)
+                               (pdf-cell meta-duration
+                                         (format "%.2f" (read-string (:duration m))))]) rows)
                  [[[:pdf-cell {:padding 5 :colspan 3} ]]]
-                 [[(pdf-cell meta-bottom "Gesamt") (pdf-cell meta (str hours))]]))
+                 [[(pdf-cell meta-bottom "Gesamt") (pdf-cell meta-duration (str hours))]]))
         ]
        filename-and-path-pdf))
 
