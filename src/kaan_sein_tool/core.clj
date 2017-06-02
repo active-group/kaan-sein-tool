@@ -24,16 +24,16 @@
                                                        (read-string %)
                                                        %) r))) rows)
         ;;Take only :date, :description, :duration
-        row-data (map (fn [row] (select-keys row [:date :duration :description])) row-data)]
+        row-data1 (map (fn [row] (select-keys row [:date :duration :description])) row-data)]
     ;;If :duration is in format XX.XXh change to XX.XX
-    (map (fn [row] (assoc row :duration (string/replace (:duration row) #"h" ""))) row-data)))
+    (map (fn [row] (assoc row :duration (string/replace (:duration row) #"h" ""))) row-data1)))
 
 (defn get-data-from-file
   "Reads a file from given path, extracts employer, employee and year and month from filename
   Returns a map {:data :year :employee :employer}"
 [path filename]
   (let [data (slurp path)
-        data (string/join "\n" (remove #(= % "") (string/split data #"\n"))) 
+        data (string/join "\n" (remove #(= % "") (string/split data #"\n")))
         [year-month employer employee] (string/split filename #"_")]
     {:data data
      :year-month year-month
@@ -101,46 +101,51 @@
           employee (:employee stuff)
           employer (:employer stuff)
           rows (parse-csv (:data stuff))
-          hours (format "%.2f" (apply + (map (comp read-string :duration) rows)))
+          hours (format "%.2f" (apply + (map (comp double read-string :duration) rows)))
 
           meta-header {:padding-bottom 8 :padding-left 2}
           meta {:padding-bottom 6 :padding-left 2}
-          meta-duration (assoc meta :align :right :padding-right 2) 
+          meta-duration (assoc meta :align :right :padding-right 2)
           meta-bottom {:padding-bottom 6 :padding-left 2 :colspan 2}]
-      (pdf/pdf
-       [
-        {:title         (str "Zeitnachweis " month-year ", " (:employer stuff) ", " (:employee stuff))
-         :header        (str "Zeitnachweis " month-year ", " (:employer stuff) ", " (:employee stuff))
-         :subject       "Zeitnachweis"
-         :creator       "Active Group GmbH"
-         :right-margin  50
-         :author        "Active Group GmbH"
-         :bottom-margin 25
-         :left-margin   30
-         :top-margin    30
-         :size          "a4"
-         :font {:size 11}
-         :footer        "Seite"}
-        [:spacer]
-        (header employee employer month-year)
-        [:spacer 3]
-        (apply
-         pdf-table {:header 
-                    [[(pdf-cell meta-header [:paragraph {:style :bold} "Datum"])
-                      (pdf-cell meta-header [:paragraph {:style :bold} "Beschreibung / Kommentar"])
-                      (pdf-cell meta-header [:paragraph {:style :bold} "Dauer"])]]
-                    :padding 0
-                    :width-percent 100
-                    }
-         [10 60 7]
-         (concat (map (fn [m] [(pdf-cell meta (:date m))
-                               (pdf-cell meta (:description m))
-                               (pdf-cell meta-duration
-                                         (format "%.2f" (read-string (:duration m))))]) rows)
-                 [[[:pdf-cell {:padding 5 :colspan 3} ]]]
-                 [[(pdf-cell meta-bottom "Gesamt") (pdf-cell meta-duration (str hours))]]))
-        ]
-       filename-and-path-pdf))
+      (try
+        (pdf/pdf
+         [
+          {:title         (str "Zeitnachweis " month-year ", " (:employer stuff) ", " (:employee stuff))
+           :header        (str "Zeitnachweis " month-year ", " (:employer stuff) ", " (:employee stuff))
+           :subject       "Zeitnachweis"
+           :creator       "Active Group GmbH"
+           :right-margin  50
+           :author        "Active Group GmbH"
+           :bottom-margin 25
+           :left-margin   30
+           :top-margin    30
+           :size          "a4"
+           :font {:size 11}
+           :footer        "Seite"}
+          [:spacer]
+          (header employee employer month-year)
+          [:spacer 3]
+          (apply
+           pdf-table {:header
+                      [[(pdf-cell meta-header [:paragraph {:style :bold} "Datum"])
+                        (pdf-cell meta-header [:paragraph {:style :bold} "Beschreibung / Kommentar"])
+                        (pdf-cell meta-header [:paragraph {:style :bold} "Dauer"])]]
+                      :padding 0
+                      :width-percent 100
+                      }
+           [10 60 7]
+           (concat (map (fn [m] [(pdf-cell meta (:date m))
+                                 (pdf-cell meta (:description m))
+                                 (pdf-cell meta-duration
+                                           (format "%.2f" (double (read-string (:duration m)))))])
+                        rows)
+                   [[[:pdf-cell {:padding 5 :colspan 3} ""]]]
+                   [[(pdf-cell meta-bottom "Gesamt") (pdf-cell meta-duration (str hours))]]))
+          ]
+         filename-and-path-pdf)
+      (catch Exception e
+        (println "\nFehler beim Bearbeiten der Datei " filename ".")
+        (println "Fehlermeldung: " (.getMessage e)))))
 
     (println "Datei " path " nicht gefunden.")))
 
