@@ -32,8 +32,11 @@
   "Reads a file from given path, extracts employer, employee and year and month from filename
   Returns a map {:data :year :employee :employer}"
 [path filename]
-  (let [data (slurp path)
-        data (string/join "\n" (remove #(= % "") (string/split data #"\n")))
+  (let [rdr (clojure.java.io/reader
+             (java.io.InputStreamReader. (java.io.FileInputStream. path)
+                                         "UTF-8"))
+        data (slurp rdr)
+        data (string/join "\n" (remove #(= % "") (string/split data #"\n"))) ;;remove empty lines
         [year-month employer employee] (string/split filename #"_")]
     {:data data
      :year-month year-month
