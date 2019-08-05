@@ -104,7 +104,8 @@
           employee (:employee stuff)
           employer (:employer stuff)
           rows (parse-csv (:data stuff))
-          hours (format "%.2f" (apply + (map (comp double read-string :duration) rows)))
+          hours (apply + (map (comp double read-string :duration) rows))
+          hours-string (format "%.2f" hours)
 
           meta-header {:padding-bottom 8 :padding-left 2}
           meta {:padding-bottom 6 :padding-left 2}
@@ -143,17 +144,20 @@
                                            (format "%.2f" (double (read-string (:duration m)))))])
                         rows)
                    [[[:pdf-cell {:padding 5 :colspan 3} ""]]]
-                   [[(pdf-cell meta-bottom "Gesamt") (pdf-cell meta-duration (str hours))]]))
+                   [[(pdf-cell meta-bottom "Gesamt") (pdf-cell meta-duration (str hours-string))]]))
           ]
          filename-and-path-pdf)
-      (catch Exception e
-        (println "\nFehler beim Bearbeiten der Datei " filename ".")
-        (println "Fehlermeldung: " (.getMessage e)))))
-
-    (println "Datei " path " nicht gefunden.")))
+        (println (str (format "%-55s" filename) ": " (format "%8.2f" hours) " Stunden"))
+        hours
+        (catch Exception e
+          (println "\nFehler beim Bearbeiten der Datei " filename ".")
+          (println "Fehlermeldung: " (.getMessage e))
+          0.0)))
+    (do
+      (println "Datei " path " nicht gefunden.")
+      0.0)))
 
 (defn -main
   [& args]
-  (println "Zu bearbeitende Dateien:\n" (str "\n  " (string/join "\n  " args)))
-  (doall (map csv->pdf args))
-  (println "\nFertig."))
+  (let [total-hours (apply + (map csv->pdf args))]
+    (println (str (format "%55s" "Summe") ": " (format "%8.2f" total-hours) " Stunden"))))
